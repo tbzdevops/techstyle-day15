@@ -1,4 +1,4 @@
-# Tag 15 — Container Teil 1
+# Tag 15 Projekt — Container Teil 1
 
 > **Projektauftrag TechStyle Online Shop.** Dieses Repository ist dein
 > Startpunkt fuer Tag 15 und enthaelt den Stand nach Tag 14.
@@ -47,7 +47,7 @@ sobald eine Aenderung es wieder bricht, verschwindet der Haken. Du musst hier
 nichts von Hand pflegen — beim naechsten Push wird die Liste ueberschrieben.
 
 <!-- c50:progress -->
-**Fortschritt: 0 / 3 Kriterien erfüllt** ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜ — Stand: 2026-08-23 22:08 UTC.
+**Fortschritt: 0 / 3 Kriterien erfüllt** ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜ — noch nicht geprueft.
 <!-- /c50:progress -->
 
 - [ ] ⬜ Container/Build-Workflow existiert
