@@ -41,18 +41,24 @@ Image mit der containerisierten Applikation.
 
 ## Abnahmekriterien
 
-Diese Kriterien werden bei jedem Push automatisch geprueft:
+Diese Kriterien prueft die Pipeline bei jedem Push automatisch. **Die Haken
+setzt die Pipeline selbst:** ein erfuelltes Kriterium wird abgehakt, und
+sobald eine Aenderung es wieder bricht, verschwindet der Haken. Du musst hier
+nichts von Hand pflegen — beim naechsten Push wird die Liste ueberschrieben.
+
+<!-- c50:progress -->
+**Fortschritt: 0 / 3 automatisch geprueften Kriterien erfuellt.** Noch nicht geprueft.
+<!-- /c50:progress -->
 
 - [ ] Container/Build-Workflow existiert
-      (`.github/workflows/container*.yml`, `build*.yml` oder `docker*.yml`)
 - [ ] Docker Image Build im Workflow
 - [ ] Registry-Push oder Image Scanning vorhanden
 
-Manuell abgenommen werden zusaetzlich:
+Zusaetzlich manuell abgenommen (nicht automatisch geprueft):
 
-- [ ] Monolith analysiert und Komponenten identifiziert
-- [ ] Architekturdiagramm vor/nach der Containerisierung
-- [ ] Microservice-Stack mit Docker Compose erstellt
+- Monolith analysiert und Komponenten identifiziert
+- Architekturdiagramm vor/nach der Containerisierung
+- Microservice-Stack mit Docker Compose erstellt
 
 ## Abnahmekriterien selber pruefen
 
@@ -75,7 +81,8 @@ Exit-Code 1.
 
 **In GitHub** — bei jedem Push:
 
-Der Workflow **🎓 Classroom Autograding** laeuft automatisch. Ergebnis im Tab
+Der Workflow **🎓 Classroom Autograding** laeuft automatisch und hakt die
+erfuellten Kriterien oben im README ab. Ergebnis im Tab
 **Actions** → letzter Run → Job *Abnahmekriterien pruefen*.
 
 ## Anwendung lokal starten
