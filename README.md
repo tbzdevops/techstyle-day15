@@ -1,7 +1,7 @@
-# Tag 12 Projekt — DevSecOps
+# Tag 15 Projekt — DevSecOps
 
 > **Projektauftrag TechStyle Online Shop.** Dieses Repository ist dein
-> Startpunkt fuer Tag 12 und enthaelt den Stand nach Tag 11.
+> Startpunkt fuer Tag 15 und enthaelt den Stand nach Tag 14.
 
 ## Ausgangslage
 
@@ -106,7 +106,7 @@ Das Skript liest die Tagesnummer aus `.classroom50.yaml`. Du kannst sie auch
 erzwingen:
 
 ```bash
-CLASSROOM_DAY=12 bash .github/classroom/grade.sh
+CLASSROOM_DAY=15 bash .github/classroom/grade.sh
 ```
 
 Die Ausgabe listet jedes Kriterium mit ✅ oder ❌ und nennt bei jedem ❌ den
