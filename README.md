@@ -76,7 +76,7 @@ sobald eine Änderung es wieder bricht, verschwindet der Haken. Du musst hier
 nichts von Hand pflegen, beim nächsten Push wird die Liste überschrieben.
 
 <!-- c50:progress -->
-**Fortschritt: 0 / 13 Kriterien erfüllt** ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜
+**Fortschritt: 0 / 13 Kriterien erfüllt** ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜ — Stand: 2026-11-17 21:17 UTC.
 <!-- /c50:progress -->
 
 - [ ] ⬜ Rolle 1: Security-Workflow vorhanden (.github/workflows/security.yml)
