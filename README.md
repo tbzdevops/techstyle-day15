@@ -1,102 +1,109 @@
-# Tag 15 Projekt — DevSecOps
+# Tag 15 Projekt — DevSecOps: Security-Pipeline für TechStyle
 
-> **Projektauftrag TechStyle Online Shop.** Dieses Repository ist dein
-> Startpunkt fuer Tag 15 und enthaelt den Stand nach Tag 14.
+> **Projektauftrag TechStyle Online Shop.** Dieses Repository ist eure Abgabe
+> für Tag 15. Es enthält den Stand von
+> [`day_14_solution`](https://github.com/tbzdevops/techstyle/tree/day_14_solution):
+> den containerisierten Shop mit Deployment auf AWS.
 
-## Ausgangslage
+## Story
 
-Eine kuerzlich erfolgte Sicherheitsverletzung bei einem Konkurrenten hat die
-Dringlichkeit von Sicherheitsmassnahmen bei TechStyle erhoeht. Das Team
-integriert heute SAST- und DAST-Tools in die CI/CD-Pipeline, fuehrt ein
-Security-Audit durch und behebt kritische Sicherheitsluecken im Online-Shop,
-um Kundeninformationen besser zu schuetzen.
+Ein Konkurrent von TechStyle wurde gehackt, Kundendaten sind im Netz
+aufgetaucht. Der Shop-Betreiber will wissen, ob ihm das auch passieren kann.
+Euer Team baut heute eine Security-Pipeline, die jede Änderung am Shop
+automatisch prüft und unsichere Änderungen stoppt. Zum Schluss müsst ihr den
+Betreiber in einem kurzen Pitch davon überzeugen, dass sich das lohnt.
 
-## Ziel
+## Ausgangsstand
 
-Erweitert euer TechStyle-Projekt um eine DevSecOps-Pipeline. Implementiert
-automatisierte Sicherheitstests in eure bestehende CI/CD-Pipeline: statische
-Code-Analyse (SAST) und Software Composition Analysis (SCA). Wenn ihr Zeit
-habt, integriert als Zusatzaufgabe dynamische Sicherheitstests (DAST).
+- **Eigenes Projekt nach Tag 14:** Übernehmt euren Stand wie an Tag 14 (Weg A):
 
-**Voraussetzungen:** GitHub Actions aktiviert, ein Snyk-Account mit
-API-Token, YAML-Grundkenntnisse.
+  ```bash
+  git remote add team <URL eures Team-Repos>
+  git fetch team
+  git rm -r -q .                                   # Stand von day_14_solution entfernen
+  git checkout team/<euer-Branch> -- .             # euren Projektstand übernehmen
+  git checkout HEAD -- README.md .github/classroom .github/workflows/classroom.yml
+  git commit -m "Eigenen Projektstand nach Tag 14 übernommen"
+  git push
+  ```
+
+- **`day_14_solution`:** Ihr müsst nichts tun, dieses Repository enthält genau
+  diesen Stand.
 
 ## Aufgaben
 
-### 1. Security-Workflow erstellen
+**Zeit:** 50 Min | **Format:** Gruppen à 3–4 | **Pitch:** um 11:05 Uhr
 
-- Legt `.github/workflows/security-pipeline.yml` an.
-- Der Workflow wird bei Push auf `main` und bei Pull Requests ausgeloest.
-- Nutzt einen Ubuntu-Runner.
+Die Vorlagen für beide Workflows stehen in der Tagesplanung von Tag 15,
+Abschnitt **Projekt**.
 
-### 2. SAST/SCA-Integration mit Snyk
+| Zeit | Was |
+|------|-----|
+| 5 Min | Rollen verteilen, `SNYK_TOKEN` als Repository-Secret anlegen |
+| 30 Min | Rolle 1 und Rolle 2 parallel umsetzen, die übrigen Gruppenmitglieder unterstützen und bereiten den Pitch vor |
+| 5 Min | Gemeinsam: Gate-Beweis mit einem roten Pull-Request |
+| 10 Min | Pitch fertigstellen und einmal laut durchspielen |
 
-- Hinterlegt den Snyk-Token als GitHub Secret `SNYK_TOKEN`.
-- Implementiert `snyk test` fuer Dependency-Scanning **und** `snyk code test`
-  fuer die Code-Analyse.
-- Definiert sinnvolle Severity-Thresholds, z. B. nur bei High/Critical
-  fehlschlagen.
+**Vorbereitung:** **Settings** → **Secrets and variables** → **Actions** →
+**New repository secret** → Name `SNYK_TOKEN`, Wert: euer Snyk-Token. In der
+Snyk-Organisation muss **Snyk Code** aktiviert sein.
 
-### 3. (Optional) Anwendung fuer DAST vorbereiten
+1. **Rolle 1 – Gate:** `.github/workflows/security.yml` führt bei jedem Push
+   auf `main` und bei jedem Pull-Request `snyk test` (SCA) und
+   `snyk code test` (SAST) aus, scheitert nur bei High und Critical
+   (`--severity-threshold=high`) und lädt die Ergebnisse als SARIF in den
+   Security-Tab.
+2. **Rolle 2 – Container:** `.github/workflows/container-scan.yml` baut das
+   Image und scannt es mit `snyk container test`. Aktualisiert danach die
+   `FROM`-Zeile im `Dockerfile` nach der Empfehlung von Snyk und prüft mit
+   `docker compose up --build`, dass der Shop weiterhin läuft.
+3. **Gemeinsam – Gate-Beweis:** Öffnet einen Pull-Request, der in
+   `requirements.txt` die Zeile `PyYAML==5.3` ergänzt. Der Security-Workflow
+   muss rot werden. Nicht mergen. Den Link zum roten Lauf tragt ihr in
+   `PITCH.md` unter «Beweis» ein.
+4. **Alle – Pitch:** `PITCH.md` mit den vier Teilen Risiko, Lösung, Beweis und
+   Nutzen, 2–3 Minuten, ohne Fachjargon. Bereitet euch auf Kundenfragen vor.
 
-- Startet die TechStyle-Anwendung im CI-Workflow und stellt sicher, dass sie
-  erreichbar ist (z. B. via `localhost:<Port>`).
-- Fuer die Datenbank: GitHub Services oder eine In-Memory-Variante.
-
-### 4. (Optional) DAST-Integration mit OWASP ZAP
-
-- Integriert den OWASP ZAP Baseline Scan.
-- Konfiguriert ZAP fuer eure URLs und Authentifizierung.
-- Stellt sicher, dass Login und Checkout gescannt werden.
-
-### 5. Reporting und Monitoring
-
-- Lasst Snyk eine SARIF-Datei erzeugen und ladet sie zu GitHub hoch. Die
-  Findings erscheinen dann unter **Security → Code Scanning**.
-- Dokumentiert die gefundenen Schwachstellen und wie sie behoben werden.
-
-**Erwartete Deliverables**
-
-- Funktionsfaehige Security-Pipeline mit SAST und SCA in GitHub Actions
-- Dokumentation der implementierten Security-Massnahmen
-- Analyse-Report der gefundenen Schwachstellen
-- Behebungsplan fuer kritische Findings
-
-> **Tipp:** Beginnt mit "warn-only", um Pipeline-Blockaden zu vermeiden, und
-> zieht die Thresholds danach an.
+> ⚠️ Code Scanning steht in **privaten** Repositories nur mit der Lizenz
+> «GitHub Code Security» zur Verfügung. Schlägt der SARIF-Upload deshalb fehl,
+> ladet die SARIF-Dateien stattdessen mit `actions/upload-artifact@v4` hoch.
 
 ## Abnahmekriterien
 
-Diese Kriterien prueft die Pipeline bei jedem Push automatisch. **Die Haken
-setzt die Pipeline selbst:** ein erfuelltes Kriterium wird abgehakt, und
-sobald eine Aenderung es wieder bricht, verschwindet der Haken. Du musst hier
-nichts von Hand pflegen — beim naechsten Push wird die Liste ueberschrieben.
+Diese Kriterien prüft die Pipeline bei jedem Push automatisch. **Die Haken
+setzt die Pipeline selbst:** Ein erfülltes Kriterium wird abgehakt, und
+sobald eine Änderung es wieder bricht, verschwindet der Haken. Du musst hier
+nichts von Hand pflegen, beim nächsten Push wird die Liste überschrieben.
 
 <!-- c50:progress -->
-**Fortschritt: 0 / 0 Kriterien erfüllt**  — Stand: 2026-09-05 23:04 UTC.
+**Fortschritt: 0 / 13 Kriterien erfüllt** ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜
 <!-- /c50:progress -->
 
-- [ ] ⬜ Aufgabe 1: Security-Workflow vorhanden (.github/workflows/security-pipeline.yml)
-- [ ] ⬜ Aufgabe 1: Workflow definiert mindestens einen Job (jobs:)
-- [ ] ⬜ Aufgabe 1: Wird bei Push und Pull Request ausgelöst
-- [ ] ⬜ Aufgabe 2: SNYK_TOKEN als GitHub Secret referenziert
-- [ ] ⬜ Aufgabe 2: Dependency-Scanning vorhanden (snyk test / SCA)
-- [ ] ⬜ Aufgabe 2: Statische Code-Analyse vorhanden (snyk code test / SAST)
-- [ ] ⬜ Aufgabe 2: Severity-Threshold definiert (z. B. high/critical)
-- [ ] ⬜ Aufgabe 5: SARIF-Report wird zu GitHub Code Scanning hochgeladen
-- [ ] ⬜ Aufgabe 5: Security-Dokumentation vorhanden (SECURITY.md)
-- [ ] ⬜ Aufgabe 5: SECURITY.md dokumentiert Findings und Behebung
-- [ ] ⬜ Aufgabe 5: SECURITY.md hat ausreichend Inhalt (mind. 100 Wörter)
+- [ ] ⬜ Rolle 1: Security-Workflow vorhanden (.github/workflows/security.yml)
+- [ ] ⬜ Rolle 1: Läuft bei jedem Push auf main und bei jedem Pull-Request
+- [ ] ⬜ Rolle 1: SNYK_TOKEN wird als GitHub Secret gelesen
+- [ ] ⬜ Rolle 1: SCA mit snyk test
+- [ ] ⬜ Rolle 1: SAST mit snyk code test
+- [ ] ⬜ Rolle 1: Build scheitert nur bei High und Critical (--severity-threshold=high)
+- [ ] ⬜ Rolle 1: Findings als SARIF im Security-Tab oder als Artefakt
+- [ ] ⬜ Rolle 2: Container-Workflow vorhanden (.github/workflows/container-scan.yml)
+- [ ] ⬜ Rolle 2: Image wird im Workflow gebaut und mit snyk container test gescannt
+- [ ] ⬜ Rolle 2: Base-Image im Dockerfile ist aktualisiert (nicht mehr python:3.11-slim)
+- [ ] ⬜ Pitch: PITCH.md vorhanden
+- [ ] ⬜ Pitch: PITCH.md enthält Risiko, Lösung, Beweis und Nutzen
+- [ ] ⬜ Gate-Beweis: PITCH.md verlinkt den roten Pull-Request oder Lauf
 
-Zusaetzlich manuell abgenommen (nicht automatisch geprueft):
+Zusätzlich manuell abgenommen (nicht automatisch geprüft):
 
-- DevSecOps-Konzept und Shift-Left-Ansatz erklaert
-- DAST mit OWASP ZAP durchgefuehrt (optionale Zusatzaufgabe)
-- Kritische Sicherheitsluecken identifiziert und behoben
+- Der Security-Workflow läuft im Tab **Actions**, die Findings erscheinen unter
+  **Security** → **Code scanning** (oder als Artefakt)
+- Der Pull-Request mit `PyYAML==5.3` ist rot und wurde nicht gemergt
+- Der Shop läuft mit dem neuen Base-Image (`docker compose up --build`)
+- Kunden-Pitch, falls eure Gruppe um 11:05 Uhr ausgelost wird
 
-## Abnahmekriterien selber pruefen
+## Abnahmekriterien selber prüfen
 
-**Lokal** — jederzeit, ohne Push:
+**Lokal**, jederzeit und ohne Push:
 
 ```bash
 bash .github/classroom/grade.sh
@@ -110,30 +117,33 @@ CLASSROOM_DAY=15 bash .github/classroom/grade.sh
 ```
 
 Die Ausgabe listet jedes Kriterium mit ✅ oder ❌ und nennt bei jedem ❌ den
-konkreten Loesungshinweis. Sobald ein Kriterium fehlt, endet das Skript mit
+konkreten Lösungshinweis. Sobald ein Kriterium fehlt, endet das Skript mit
 Exit-Code 1.
 
-**In GitHub** — bei jedem Push:
+**In GitHub**, bei jedem Push:
 
-Der Workflow **🎓 Classroom Autograding** laeuft automatisch und hakt die
-erfuellten Kriterien oben im README ab. Ergebnis im Tab
-**Actions** → letzter Run → Job *Abnahmekriterien pruefen*.
+Der Workflow **🎓 Classroom Autograding** läuft automatisch und hakt die
+erfüllten Kriterien oben im README ab. Ergebnis im Tab
+**Actions** → letzter Run → Job *Abnahmekriterien prüfen*. Er committet die
+Haken auf `main`: Holt sie vor jedem Push mit `git pull --rebase`.
 
-Die Punktzahl ist **anteilig**: jedes erfuellte Abnahmekriterium zaehlt einen
-Punkt (z. B. `Points 8/13`). Gruen wird der Lauf erst, wenn alle Kriterien
-erfuellt sind — Teilpunkte gibt es aber ab dem ersten.
+Die Punktzahl ist **anteilig**: Jedes erfüllte Abnahmekriterium zählt einen
+Punkt (z. B. `Points 8/13`). Grün wird der Lauf erst, wenn alle Kriterien
+erfüllt sind, Teilpunkte gibt es aber ab dem ersten.
 
 ## Anwendung lokal starten
 
+Wie an Tag 13 mit Docker Compose:
+
 ```bash
-./run_dev.sh
+cp .env.container.example .env.container   # Werte eintragen, siehe Kommentar in der Datei
+docker compose --env-file .env.container up --build -d --wait
 ```
 
-Legt ein venv an, installiert die Abhaengigkeiten, seedet die Datenbank und
-startet den Dev-Server auf http://localhost:5000. Admin-Panel unter `/admin`.
+Der Shop läuft danach auf http://localhost:5001, das Admin-Panel unter `/admin`.
 
-Hinweise zur Anwendung:
+## Musterlösung
 
-- Die Datenbank liegt unter `/tmp/techstyle.db`.
-- `python seed_data.py` (im aktivierten venv) setzt die Produkte zurueck.
-- Das Admin-Panel hat noch kein Login — das ist zum jetzigen Zeitpunkt so gewollt.
+Nach dem Unterricht findest du die Musterlösung im Repository
+[`tbzdevops/techstyle`](https://github.com/tbzdevops/techstyle/tree/day_15_solution)
+auf dem Branch `day_15_solution`.

@@ -1,86 +1,95 @@
 #!/bin/bash
+# PROJEKT Tag 15 — DevSecOps: Security-Pipeline für TechStyle.
+# Geprüft werden nur security.yml und container-scan.yml. Der Ausgangsstand
+# (day_14_solution) bringt viele weitere Workflows mit; ein generischer grep
+# über .github/workflows/ würde sonst fremde Schritte als Lösung werten.
 source .github/classroom/grade.sh
 
-echo "🔍 Prüfe Abnahmekriterien für Tag 15 — DevSecOps"
-echo ""
-
-# Security-Workflows der Studierenden: alle security*.yml sowie jeder
-# Workflow, der echte Security-Schritte enthaelt (eine in ci.yml integrierte
-# Security-Stage ist damit ebenfalls abgedeckt). Die Autograding-Pipeline ist
-# ausgenommen, damit ihre eigenen Schritte nicht als Loesung durchgehen.
-security_workflow_files() {
-  {
-    ls .github/workflows/security*.yml .github/workflows/security*.yaml 2>/dev/null
-    grep -lEi 'snyk|owasp|zap|sarif|trivy' \
-      .github/workflows/*.yml .github/workflows/*.yaml 2>/dev/null
-  } | grep -v 'classroom\.yml$' | sort -u
+solution_for_id() {
+  case "$1" in
+    sec-wf) echo "Lege .github/workflows/security.yml nach der Vorlage in Tag15.md an (Rolle 1)" ;;
+    sec-trigger) echo "Trigger: 'push: branches: [main]' und 'pull_request:'" ;;
+    sec-token) echo "Lies den Token als Secret: 'SNYK_TOKEN: \${{ secrets.SNYK_TOKEN }}' und lege das Repository-Secret SNYK_TOKEN an" ;;
+    sec-sca) echo "Füge einen Schritt mit 'snyk test' hinzu (SCA, Abhängigkeiten aus requirements.txt)" ;;
+    sec-sast) echo "Füge einen Schritt mit 'snyk code test' hinzu (SAST, eigener Quellcode)" ;;
+    sec-threshold) echo "Ergänze --severity-threshold=high, damit nur High und Critical den Build scheitern lassen" ;;
+    sec-sarif) echo "Schreibe --sarif-file-output=... und lade die Datei mit github/codeql-action/upload-sarif (oder actions/upload-artifact) hoch" ;;
+    ct-wf) echo "Lege .github/workflows/container-scan.yml nach der Vorlage in Tag15.md an (Rolle 2)" ;;
+    ct-scan) echo "Baue das Image im Workflow (docker build -t techstyle:ci .) und scanne es mit 'snyk container test techstyle:ci --file=Dockerfile'" ;;
+    ct-base) echo "Ersetze 'FROM python:3.11-slim' im Dockerfile durch das Base-Image, das Snyk im Log empfiehlt" ;;
+    pitch-file) echo "Lege PITCH.md im Wurzelverzeichnis an" ;;
+    pitch-parts) echo "Gliedere PITCH.md in vier Teile: Risiko, Lösung, Beweis, Nutzen" ;;
+    pitch-proof) echo "Trage unter 'Beweis' den Link zum roten Pull-Request (…/pull/<nr>) oder Lauf (…/actions/runs/<nr>) ein oder bette einen Screenshot ein" ;;
+    *) echo "Überprüfe die Aufgabenstellung im README" ;;
+  esac
 }
 
-# /dev/null haengt bei jedem grep hinten an, damit eine leere Dateiliste
-# fehlschlaegt statt auf stdin zu warten.
-SEC_FILES="$(security_workflow_files | tr '\n' ' ')/dev/null"
+first_file() { for f in "$@"; do [ -f "$f" ] && { echo "$f"; return; }; done; echo /dev/null; }
+SEC="$(first_file .github/workflows/security.yml .github/workflows/security.yaml)"
+CT="$(first_file .github/workflows/container-scan.yml .github/workflows/container-scan.yaml)"
+PITCH=PITCH.md
 
-echo "── Aufgabe 1: Security-Workflow erstellen ──"
+echo "🔍 Prüfe Abnahmekriterien für Tag 15 — DevSecOps (Security-Pipeline und Pitch)"
+echo ""
 
-check \
-  "security-workflow" \
-  "Aufgabe 1: Security-Workflow vorhanden (.github/workflows/security-pipeline.yml)" \
-  "security_workflow_files | grep -q ."
+echo "── Rolle 1: Gate – Snyk in der Pipeline ──"
 
-check \
-  "security-workflow" \
-  "Aufgabe 1: Workflow definiert mindestens einen Job (jobs:)" \
-  "grep -qE '^jobs:' $SEC_FILES"
+check "sec-wf" \
+  "Rolle 1: Security-Workflow vorhanden (.github/workflows/security.yml)" \
+  "[ '$SEC' != /dev/null ]"
 
-check \
-  "security-trigger" \
-  "Aufgabe 1: Wird bei Push und Pull Request ausgelöst" \
-  "grep -qE '(^|[^a-z])push' $SEC_FILES && grep -qE 'pull_request' $SEC_FILES"
+check "sec-trigger" \
+  "Rolle 1: Läuft bei jedem Push auf main und bei jedem Pull-Request" \
+  "grep -qE '^[[:space:]]*push[[:space:]]*:' $SEC && grep -qE '^[[:space:]]*pull_request[[:space:]]*:?' $SEC && grep -qE 'main' $SEC"
+
+check "sec-token" \
+  "Rolle 1: SNYK_TOKEN wird als GitHub Secret gelesen" \
+  "grep -qE 'secrets\.SNYK_TOKEN' $SEC"
+
+check "sec-sca" \
+  "Rolle 1: SCA mit snyk test" \
+  "grep -qE 'snyk[[:space:]]+test([[:space:]]|$)|uses:[[:space:]]*snyk/actions/python' $SEC"
+
+check "sec-sast" \
+  "Rolle 1: SAST mit snyk code test" \
+  "grep -qE 'snyk[[:space:]]+code[[:space:]]+test|command:[[:space:]]*code[[:space:]]+test' $SEC"
+
+check "sec-threshold" \
+  "Rolle 1: Build scheitert nur bei High und Critical (--severity-threshold=high)" \
+  "grep -qE -- '--severity-threshold[= ](high|critical)' $SEC"
+
+check "sec-sarif" \
+  "Rolle 1: Findings als SARIF im Security-Tab oder als Artefakt" \
+  "grep -qE -- '--sarif-file-output' $SEC && grep -qE 'codeql-action/upload-sarif|actions/upload-artifact' $SEC"
 
 echo ""
-echo "── Aufgabe 2: SAST/SCA-Integration mit Snyk ──"
+echo "── Rolle 2: Container – Image scannen ──"
 
-check \
-  "snyk-token" \
-  "Aufgabe 2: SNYK_TOKEN als GitHub Secret referenziert" \
-  "grep -qE 'secrets\.SNYK_TOKEN' $SEC_FILES"
+check "ct-wf" \
+  "Rolle 2: Container-Workflow vorhanden (.github/workflows/container-scan.yml)" \
+  "[ '$CT' != /dev/null ]"
 
-check \
-  "snyk-sca" \
-  "Aufgabe 2: Dependency-Scanning vorhanden (snyk test / SCA)" \
-  "grep -qiE 'snyk[^\n]*test|snyk/actions' $SEC_FILES"
+check "ct-scan" \
+  "Rolle 2: Image wird im Workflow gebaut und mit snyk container test gescannt" \
+  "grep -qE 'docker[[:space:]]+(build|buildx)|docker/build-push-action' $CT && grep -qE 'snyk[[:space:]]+container[[:space:]]+test|uses:[[:space:]]*snyk/actions/docker' $CT"
 
-check \
-  "snyk-sast" \
-  "Aufgabe 2: Statische Code-Analyse vorhanden (snyk code test / SAST)" \
-  "grep -qiE 'snyk code|code test|sast' $SEC_FILES"
-
-check \
-  "severity-threshold" \
-  "Aufgabe 2: Severity-Threshold definiert (z. B. high/critical)" \
-  "grep -qiE 'severity[- ]?threshold|--severity|high|critical' $SEC_FILES"
+check "ct-base" \
+  "Rolle 2: Base-Image im Dockerfile ist aktualisiert (nicht mehr python:3.11-slim)" \
+  "grep -qiE '^FROM[[:space:]]' Dockerfile && ! grep -qiE '^FROM[[:space:]]+python:3\.11-slim([[:space:]]|$)' Dockerfile"
 
 echo ""
-echo "── Aufgabe 5: Reporting und Dokumentation ──"
+echo "── Alle: Gate-Beweis und Pitch ──"
 
-check \
-  "sarif-upload" \
-  "Aufgabe 5: SARIF-Report wird zu GitHub Code Scanning hochgeladen" \
-  "grep -qiE 'upload-sarif|sarif_file|\.sarif' $SEC_FILES"
+check_file_exists "pitch-file" \
+  "Pitch: PITCH.md vorhanden" \
+  "$PITCH"
 
-check_file_exists \
-  "security-doc" \
-  "Aufgabe 5: Security-Dokumentation vorhanden (SECURITY.md)" \
-  "SECURITY.md"
+check "pitch-parts" \
+  "Pitch: PITCH.md enthält Risiko, Lösung, Beweis und Nutzen" \
+  "grep -qi 'risiko' $PITCH && grep -qiE 'lösung|loesung' $PITCH && grep -qi 'beweis' $PITCH && grep -qi 'nutzen' $PITCH"
 
-check \
-  "security-doc" \
-  "Aufgabe 5: SECURITY.md dokumentiert Findings und Behebung" \
-  "grep -qiE 'schwachstell|vulnerab|finding|behebung|massnahme' SECURITY.md 2>/dev/null"
-
-check \
-  "security-doc" \
-  "Aufgabe 5: SECURITY.md hat ausreichend Inhalt (mind. 100 Wörter)" \
-  "[ \$(wc -w < SECURITY.md 2>/dev/null) -ge 100 ]"
+check "pitch-proof" \
+  "Gate-Beweis: PITCH.md verlinkt den roten Pull-Request oder Lauf" \
+  "grep -qE 'github\.com/[^/[:space:]]+/[^/[:space:]]+/(pull/[0-9]+|actions/runs/[0-9]+)|!\[[^]]*\]\([^)]+\.(png|jpe?g|gif|webp)\)' $PITCH"
 
 summary 15
