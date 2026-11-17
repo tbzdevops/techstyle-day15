@@ -68,6 +68,12 @@ Snyk-Organisation muss **Snyk Code** aktiviert sein.
 > «GitHub Code Security» zur Verfügung. Schlägt der SARIF-Upload deshalb fehl,
 > ladet die SARIF-Dateien stattdessen mit `actions/upload-artifact@v4` hoch.
 
+> ℹ️ Der Workflow **Tag 14 - Deployment auf AWS** aus `day_14_solution` läuft
+> bei jedem Push auf `main` mit und wird rot, solange die AWS-Secrets von
+> Tag 14 fehlen. Für Tag 15 ist das ohne Bedeutung. Wer ihn nicht sehen will,
+> deaktiviert ihn unter **Actions** → *Tag 14 - Deployment auf AWS* →
+> **⋯** → **Disable workflow**.
+
 ## Abnahmekriterien
 
 Diese Kriterien prüft die Pipeline bei jedem Push automatisch. **Die Haken
